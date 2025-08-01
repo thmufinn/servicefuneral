@@ -284,6 +284,21 @@ body {
     background: rgba(255, 0, 0, 1);
 }
 
+.image-error {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    text-align: center;
+    white-space: nowrap;
+    z-index: 10;
+}
+
 /* 버튼 섹션 */
 .button-section {
     text-align: center;
