@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>서비스 장례준비</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
@@ -13,7 +14,19 @@
         
         <!-- 음악 컨트롤 버튼 -->
         <div class="music-control">
-            <button id="musicToggle" class="music-btn">🔇</button>
+            <button id="musicToggle" class="music-btn">
+                <!-- 음소거 아이콘 (기본 상태) -->
+                <svg class="sound-off-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                    <line x1="23" y1="9" x2="17" y2="15"/>
+                    <line x1="17" y1="9" x2="23" y2="15"/>
+                </svg>
+                <!-- 음악 재생 아이콘 (재생 상태) -->
+                <svg class="sound-on-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                    <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                </svg>
+            </button>
         </div>
         
         <!-- 철문 애니메이션 -->
@@ -27,7 +40,10 @@
         <!-- 메인 콘텐츠 -->
         <div class="main-content" id="mainContent">
             <header class="header">
-                <h1 class="title">서비스 장례준비</h1>
+                <h1 class="title">
+                    <img src="img/favicon.png" alt="장례 아이콘" class="title-icon">
+                    서비스 장례준비
+                </h1>
                 <p class="subtitle">마지막 여정을 위한 준비</p>
             </header>
             

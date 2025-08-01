@@ -420,11 +420,16 @@ async function toggleMusic() {
         }
         
         const isPlaying = await window.funeralMusic.toggle();
+        const soundOffIcon = musicToggle.querySelector('.sound-off-icon');
+        const soundOnIcon = musicToggle.querySelector('.sound-on-icon');
+        
         if (isPlaying) {
-            musicToggle.textContent = '🔊';
+            soundOffIcon.style.display = 'none';
+            soundOnIcon.style.display = 'block';
             musicToggle.classList.add('playing');
         } else {
-            musicToggle.textContent = '🔇';
+            soundOffIcon.style.display = 'block';
+            soundOnIcon.style.display = 'none';
             musicToggle.classList.remove('playing');
         }
     } catch (error) {
@@ -493,7 +498,10 @@ async function handleFuneralPrep() {
         // 음악 재생
         const musicSuccess = await window.funeralMusic.createFuneralMusic();
         if (musicSuccess) {
-            musicToggle.textContent = '🔊';
+            const soundOffIcon = musicToggle.querySelector('.sound-off-icon');
+            const soundOnIcon = musicToggle.querySelector('.sound-on-icon');
+            soundOffIcon.style.display = 'none';
+            soundOnIcon.style.display = 'block';
             musicToggle.classList.add('playing');
         }
     } catch (error) {
@@ -522,14 +530,59 @@ function startDoorAnimation() {
     setTimeout(() => {
         metalDoor.classList.add('door-down');
         
-        // 철문이 완전히 내려온 후 텍스트 변경
+        // 철문이 완전히 내려온 후 텍스트 변경 및 충돌 효과
         setTimeout(() => {
             const doorText = metalDoor.querySelector('.door-text');
             doorText.innerHTML = '<div class="text-line">장례 준비를</div><div class="text-line">시작합니다</div>';
             doorText.style.fontSize = '1.2rem';
+            
+            // 철문 충돌 효과 추가
+            metalDoor.classList.add('door-impact');
+            
+            // "꿍" 소리 재생
+            playDoorImpactSound();
+            
+            // 충돌 애니메이션 완료 후 클래스 제거
+            setTimeout(() => {
+                metalDoor.classList.remove('door-impact');
+            }, 500);
         }, 25000);
         
     }, 1000);
+}
+
+// 철문 충돌 소리 재생
+function playDoorImpactSound() {
+    try {
+        // Web Audio API를 사용하여 "꿍" 소리 생성
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        // 저주파 사인파로 "꿍" 소리 생성
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(80, audioContext.currentTime); // 80Hz 저주파
+        oscillator.frequency.exponentialRampToValueAtTime(40, audioContext.currentTime + 0.1); // 주파수 감소
+        
+        // 볼륨 조절
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+        
+        // 메모리 정리
+        setTimeout(() => {
+            oscillator.disconnect();
+            gainNode.disconnect();
+        }, 300);
+        
+    } catch (error) {
+        console.log('철문 충돌 소리 재생 실패:', error);
+    }
 }
 
 // 철문 리셋

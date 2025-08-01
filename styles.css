@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Noto Sans KR', sans-serif;
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%);
     color: #ffffff;
     min-height: 100vh;
     overflow-x: hidden;
@@ -28,7 +28,7 @@ body {
     width: 360px;
     max-width: 100%;
     height: 100vh;
-    background: #1a1a1a;
+    background: #121212;
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -52,15 +52,15 @@ body {
             0deg,
             transparent 0px,
             transparent 15px,
-            #2a2a2a 15px,
-            #2a2a2a 17px
+            #1a1a1a 15px,
+            #1a1a1a 17px
         ),
         repeating-linear-gradient(
             0deg,
             transparent 0px,
             transparent 20px,
-            #222 20px,
-            #222 22px
+            #121212 20px,
+            #121212 22px
         ),
         radial-gradient(
             ellipse at 20% 80%,
@@ -83,7 +83,7 @@ body {
     left: -10px;
     width: 20px;
     height: 100%;
-    background: linear-gradient(90deg, #111 0%, #333 50%, #111 100%);
+    background: linear-gradient(90deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
     box-shadow: 
         inset 2px 0 4px rgba(0,0,0,0.8),
         inset -2px 0 4px rgba(0,0,0,0.8);
@@ -97,7 +97,7 @@ body {
     right: -10px;
     width: 20px;
     height: 100%;
-    background: linear-gradient(90deg, #111 0%, #333 50%, #111 100%);
+    background: linear-gradient(90deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
     box-shadow: 
         inset 2px 0 4px rgba(0,0,0,0.8),
         inset -2px 0 4px rgba(0,0,0,0.8);
@@ -108,8 +108,27 @@ body {
     top: 0;
 }
 
+/* 철문 충돌 효과 */
+.metal-door.door-impact {
+    animation: doorShake 0.5s ease-in-out;
+}
+
+@keyframes doorShake {
+    0% { transform: translateX(-50%) translateY(0); }
+    10% { transform: translateX(-50%) translateY(-2px) translateX(-2px); }
+    20% { transform: translateX(-50%) translateY(0) translateX(2px); }
+    30% { transform: translateX(-50%) translateY(-1px) translateX(-1px); }
+    40% { transform: translateX(-50%) translateY(0) translateX(1px); }
+    50% { transform: translateX(-50%) translateY(-1px) translateX(-1px); }
+    60% { transform: translateX(-50%) translateY(0) translateX(1px); }
+    70% { transform: translateX(-50%) translateY(-1px) translateX(-1px); }
+    80% { transform: translateX(-50%) translateY(0) translateX(1px); }
+    90% { transform: translateX(-50%) translateY(-1px) translateX(-1px); }
+    100% { transform: translateX(-50%) translateY(0); }
+}
+
 .door-text {
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     font-weight: 700;
     color: #ffffff;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
@@ -149,6 +168,23 @@ body {
     margin-bottom: 10px;
     color: #ffffff;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.title-icon {
+    width: 2.2rem;
+    height: 2.2rem;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+
+.title-icon:hover {
+    opacity: 1;
+    transform: scale(1.1);
 }
 
 .subtitle {
@@ -318,36 +354,11 @@ body {
     font-weight: 600;
     border-radius: 50px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     letter-spacing: 0.05em;
-    position: relative;
-    overflow: hidden;
-}
-
-.funeral-prep-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    transition: left 0.5s ease;
-}
-
-.funeral-prep-btn:hover::before {
-    left: 100%;
 }
 
 .funeral-prep-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
     background: linear-gradient(135deg, #5a5a5a 0%, #3d3d3d 100%);
-}
-
-.funeral-prep-btn:active {
-    transform: translateY(0);
 }
 
 
@@ -367,21 +378,24 @@ body {
     border-radius: 50%;
     width: 50px;
     height: 50px;
-    font-size: 1.2rem;
     cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .music-btn:hover {
     background: rgba(0, 0, 0, 0.9);
     border-color: #888;
-    transform: scale(1.1);
 }
 
 .music-btn.playing {
     border-color: #4CAF50;
-    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+.music-btn svg {
+    width: 20px;
+    height: 20px;
 }
 
 /* 국화 이미지 */
@@ -445,6 +459,12 @@ body {
     
     .title {
         font-size: 1.8rem;
+        gap: 10px;
+    }
+    
+    .title-icon {
+        width: 1.8rem;
+        height: 1.8rem;
     }
     
     .subtitle {
@@ -481,6 +501,12 @@ body {
 @media (max-width: 480px) {
     .title {
         font-size: 1.5rem;
+        gap: 8px;
+    }
+    
+    .title-icon {
+        width: 1.5rem;
+        height: 1.5rem;
     }
     
     .upload-area {
@@ -521,7 +547,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: #1a1a1a;
+    background: #121212;
 }
 
 ::-webkit-scrollbar-thumb {
