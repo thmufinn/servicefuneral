@@ -25,6 +25,11 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadArea.style.visibility = 'visible';
         uploadArea.style.opacity = '1';
     }, 100);
+    
+    // 모바일에서 오디오 컨텍스트 미리 초기화
+    if (window.funeralMusic) {
+        window.funeralMusic.init();
+    }
 });
 
 // 페이지를 떠날 때 이미지 정리
@@ -50,6 +55,13 @@ function initializeEventListeners() {
     
     // 음악 컨트롤
     musicToggle.addEventListener('click', toggleMusic);
+    
+    // 모바일에서 첫 클릭 시 오디오 컨텍스트 활성화
+    document.addEventListener('click', function() {
+        if (window.funeralMusic && !window.funeralMusic.isInitialized) {
+            window.funeralMusic.activateAudioContext();
+        }
+    }, { once: true });
 }
 
 // 이미지 업로드 처리
@@ -399,14 +411,22 @@ function cleanupOldStorageData() {
 }
 
 // 음악 토글
-function toggleMusic() {
-    const isPlaying = window.funeralMusic.toggle();
-    if (isPlaying) {
-        musicToggle.textContent = '🔊';
-        musicToggle.classList.add('playing');
-    } else {
-        musicToggle.textContent = '🔇';
-        musicToggle.classList.remove('playing');
+async function toggleMusic() {
+    try {
+        const isPlaying = await window.funeralMusic.toggle();
+        if (isPlaying) {
+            musicToggle.textContent = '🔊';
+            musicToggle.classList.add('playing');
+        } else {
+            musicToggle.textContent = '🔇';
+            musicToggle.classList.remove('playing');
+        }
+    } catch (error) {
+        console.error('음악 토글 실패:', error);
+        // 모바일에서 음악이 작동하지 않을 경우 사용자에게 알림
+        if (error.name === 'NotAllowedError') {
+            alert('모바일에서 음악을 재생하려면 화면을 터치해주세요.');
+        }
     }
 }
 
@@ -450,7 +470,7 @@ function loadSavedImages() {
 
 
 // 장례준비 버튼 처리
-function handleFuneralPrep() {
+async function handleFuneralPrep() {
     // 이미지가 없으면 알림
     if (uploadedImages.length === 0) {
         alert('먼저 이미지를 업로드해주세요.');
@@ -461,10 +481,15 @@ function handleFuneralPrep() {
     funeralPrepBtn.disabled = true;
     funeralPrepBtn.textContent = '준비 중...';
     
-    // 음악 재생
-    window.funeralMusic.createFuneralMusic();
-    musicToggle.textContent = '🔊';
-    musicToggle.classList.add('playing');
+    try {
+        // 음악 재생
+        await window.funeralMusic.createFuneralMusic();
+        musicToggle.textContent = '🔊';
+        musicToggle.classList.add('playing');
+    } catch (error) {
+        console.error('음악 재생 실패:', error);
+        // 음악 재생에 실패해도 계속 진행
+    }
     
     // 1초 후 철문 애니메이션 시작
     setTimeout(() => {
@@ -532,6 +557,11 @@ let touchEndY = 0;
 
 document.addEventListener('touchstart', function(event) {
     touchStartY = event.touches[0].clientY;
+    
+    // 모바일에서 첫 터치 시 오디오 컨텍스트 활성화
+    if (window.funeralMusic && !window.funeralMusic.isInitialized) {
+        window.funeralMusic.activateAudioContext();
+    }
 });
 
 document.addEventListener('touchend', function(event) {

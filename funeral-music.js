@@ -5,12 +5,25 @@ class FuneralMusicGenerator {
         this.isPlaying = false;
         this.oscillator = null;
         this.gainNode = null;
+        this.isInitialized = false;
     }
 
     // 오디오 컨텍스트 초기화
     init() {
         try {
+            // 기존 컨텍스트가 있으면 닫기
+            if (this.audioContext) {
+                this.audioContext.close();
+            }
+            
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // 모바일에서 오디오 컨텍스트가 일시정지 상태일 수 있음
+            if (this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+            }
+            
+            this.isInitialized = true;
             return true;
         } catch (e) {
             console.log('오디오 컨텍스트 초기화 실패:', e);
@@ -18,10 +31,32 @@ class FuneralMusicGenerator {
         }
     }
 
-    // 평화로운 장례 음악 생성
-    createFuneralMusic() {
+    // 사용자 상호작용으로 오디오 컨텍스트 활성화
+    async activateAudioContext() {
         if (!this.audioContext) {
-            if (!this.init()) return;
+            if (!this.init()) return false;
+        }
+        
+        // 모바일에서 오디오 컨텍스트가 일시정지된 경우 재개
+        if (this.audioContext.state === 'suspended') {
+            try {
+                await this.audioContext.resume();
+                console.log('오디오 컨텍스트 재개됨');
+            } catch (e) {
+                console.log('오디오 컨텍스트 재개 실패:', e);
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    // 평화로운 장례 음악 생성
+    async createFuneralMusic() {
+        // 오디오 컨텍스트 활성화
+        if (!await this.activateAudioContext()) {
+            console.log('오디오 컨텍스트 활성화 실패');
+            return;
         }
 
         // 기존 음악 정지
@@ -78,7 +113,11 @@ class FuneralMusicGenerator {
     // 음악 정지
     stop() {
         if (this.oscillator) {
-            this.oscillator.stop();
+            try {
+                this.oscillator.stop();
+            } catch (e) {
+                console.log('오실레이터 정지 중 오류:', e);
+            }
             this.oscillator = null;
         }
         if (this.gainNode) {
@@ -88,13 +127,13 @@ class FuneralMusicGenerator {
     }
 
     // 음악 토글
-    toggle() {
+    async toggle() {
         if (this.isPlaying) {
             this.stop();
             return false;
         } else {
-            this.createFuneralMusic();
-            return true;
+            await this.createFuneralMusic();
+            return this.isPlaying;
         }
     }
 }
