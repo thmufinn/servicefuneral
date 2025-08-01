@@ -3,49 +3,19 @@ const uploadArea = document.getElementById('uploadArea');
 const imageInput = document.getElementById('imageInput');
 const imageGallery = document.getElementById('imageGallery');
 const funeralPrepBtn = document.getElementById('funeralPrepBtn');
-const shareBtn = document.getElementById('shareBtn');
 const metalDoor = document.getElementById('metalDoor');
 const mainContent = document.getElementById('mainContent');
 const musicToggle = document.getElementById('musicToggle');
 
-// 모달 관련 요소들
-const imageSelectionModal = document.getElementById('imageSelectionModal');
-const imageSelectionGrid = document.getElementById('imageSelectionGrid');
-const modalClose = document.getElementById('modalClose');
-const cancelSelection = document.getElementById('cancelSelection');
-const confirmSelection = document.getElementById('confirmSelection');
-
 // 이미지 업로드 관련 변수
 let uploadedImages = [];
-let selectedImagesForShare = []; // 공유용 선택된 이미지들
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
     initializeEventListeners();
     
-    // URL 파라미터 확인
-    const urlParams = new URLSearchParams(window.location.search);
-    const shared = urlParams.get('shared');
-    const sharedImagesKey = urlParams.get('images');
-    const sharedImageCount = urlParams.get('count');
-    
-    if (shared === 'true') {
-        if (sharedImagesKey && sharedImageCount) {
-            // 선택된 이미지들과 함께 공유된 링크
-            loadSharedImages(sharedImagesKey, parseInt(sharedImageCount));
-        } else {
-            // 일반 공유 링크
-            loadSavedImages();
-        }
-        
-        // 공유된 링크로 접근한 경우 바로 철문 애니메이션 시작
-        setTimeout(() => {
-            startDoorAnimation();
-        }, 1000);
-    } else {
-        // 일반 접근인 경우 이전 이미지 지우기
-        clearAllImages();
-    }
+    // 저장된 이미지 로드
+    loadSavedImages();
 });
 
 // 이벤트 리스너 초기화
@@ -61,33 +31,11 @@ function initializeEventListeners() {
     // 장례준비 버튼 클릭
     funeralPrepBtn.addEventListener('click', handleFuneralPrep);
 
-    // 공유하기 버튼 클릭
-    shareBtn.addEventListener('click', handleShare);
-
     // 철문 클릭 시 원래 상태로 복원
     metalDoor.addEventListener('click', resetDoor);
     
     // 음악 컨트롤
     musicToggle.addEventListener('click', toggleMusic);
-    
-    // 모달 관련 이벤트 리스너
-    modalClose.addEventListener('click', closeImageSelectionModal);
-    cancelSelection.addEventListener('click', closeImageSelectionModal);
-    confirmSelection.addEventListener('click', confirmImageSelection);
-    
-    // 모달 외부 클릭 시 닫기
-    imageSelectionModal.addEventListener('click', (e) => {
-        if (e.target === imageSelectionModal) {
-            closeImageSelectionModal();
-        }
-    });
-    
-    // ESC 키로 모달 닫기
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && imageSelectionModal.style.display === 'block') {
-            closeImageSelectionModal();
-        }
-    });
 }
 
 // 이미지 업로드 처리
@@ -96,9 +44,9 @@ function handleImageUpload(event) {
     if (files.length > 0) {
         Array.from(files).forEach(file => {
             if (file.type.startsWith('image/')) {
-                // 파일 크기 체크 (10MB 제한)
-                if (file.size > 10 * 1024 * 1024) {
-                    alert(`파일이 너무 큽니다: ${file.name}\n10MB 이하의 이미지를 선택해주세요.`);
+                // 파일 크기 체크 (5MB 제한으로 더 보수적으로 설정)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`파일이 너무 큽니다: ${file.name}\n5MB 이하의 이미지를 선택해주세요.`);
                     return;
                 }
                 compressAndAddImage(file);
@@ -130,9 +78,9 @@ function handleDrop(event) {
     if (files.length > 0) {
         Array.from(files).forEach(file => {
             if (file.type.startsWith('image/')) {
-                // 파일 크기 체크 (10MB 제한)
-                if (file.size > 10 * 1024 * 1024) {
-                    alert(`파일이 너무 큽니다: ${file.name}\n10MB 이하의 이미지를 선택해주세요.`);
+                // 파일 크기 체크 (5MB 제한으로 더 보수적으로 설정)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`파일이 너무 큽니다: ${file.name}\n5MB 이하의 이미지를 선택해주세요.`);
                     return;
                 }
                 compressAndAddImage(file);
@@ -149,106 +97,154 @@ function addImageToGallery(file) {
 
 // 이미지 압축 및 추가
 function compressAndAddImage(file) {
+    // 먼저 원본 이미지를 안전하게 로드
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        const originalDataUrl = e.target.result;
+        
+        // 원본 이미지로 테스트
+        const testImg = new Image();
+        testImg.onload = function() {
+            // 원본이 정상적으로 로드되면 압축 시도
+            tryCompressImage(file, originalDataUrl, testImg);
+        };
+        testImg.onerror = function() {
+            console.error('원본 이미지 로드 실패:', file.name);
+            alert('이미지 파일이 손상되었습니다: ' + file.name);
+        };
+        testImg.src = originalDataUrl;
+    };
+    
+    reader.onerror = function() {
+        console.error('파일 읽기 실패:', file.name);
+        alert('파일을 읽을 수 없습니다: ' + file.name);
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+// 이미지 압축 시도
+function tryCompressImage(file, originalDataUrl, originalImg) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    const img = new Image();
     
-    img.onload = function() {
-        // 이미지 크기 계산 (최대 600px로 제한하여 용량 절약)
-        const maxSize = 600;
-        let { width, height } = img;
-        
-        if (width > height) {
-            if (width > maxSize) {
-                height = (height * maxSize) / width;
-                width = maxSize;
-            }
-        } else {
-            if (height > maxSize) {
-                width = (width * maxSize) / height;
-                height = maxSize;
-            }
+    // 더 보수적인 크기 제한 (500px)
+    const maxSize = 500;
+    let { width, height } = originalImg;
+    
+    // 비율 유지하면서 크기 조정
+    if (width > height) {
+        if (width > maxSize) {
+            height = Math.round((height * maxSize) / width);
+            width = maxSize;
         }
+    } else {
+        if (height > maxSize) {
+            width = Math.round((width * maxSize) / height);
+            height = maxSize;
+        }
+    }
+    
+    // 최소 크기 보장
+    if (width < 100) width = 100;
+    if (height < 100) height = 100;
+    
+    // 캔버스 설정
+    canvas.width = width;
+    canvas.height = height;
+    
+    // 고품질 렌더링 설정
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    try {
+        // 이미지 그리기
+        ctx.drawImage(originalImg, 0, 0, width, height);
         
-        // 캔버스 크기 설정
-        canvas.width = width;
-        canvas.height = height;
+        // 압축 시도 (더 높은 품질로)
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
         
-        // 이미지 그리기 (고품질)
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        // 압축된 이미지 데이터 생성 (품질을 0.7로 조정)
-        let compressedDataUrl;
-        try {
-            compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-            
-            // 데이터 URL 유효성 검사
-            if (!compressedDataUrl || compressedDataUrl.length < 100) {
-                throw new Error('이미지 압축 실패');
-            }
-        } catch (error) {
-            console.error('이미지 압축 중 오류:', error);
-            // 압축 실패 시 원본 이미지 사용
-            const reader = new FileReader();
-            reader.onload = function(e) {
+        // 압축된 데이터 유효성 검사
+        if (compressedDataUrl && compressedDataUrl.length > 100) {
+            // 압축된 이미지 테스트
+            const testCompressed = new Image();
+            testCompressed.onload = function() {
                 addImageData({
                     id: Date.now() + Math.random().toString(36).substr(2, 9),
                     name: file.name,
-                    src: e.target.result,
+                    src: compressedDataUrl,
                     originalSize: file.size,
-                    compressedSize: e.target.result.length,
-                    type: file.type || 'image/jpeg',
+                    compressedSize: compressedDataUrl.length,
+                    type: 'image/jpeg',
                     width: width,
                     height: height
                 });
             };
-            reader.readAsDataURL(file);
-            return;
+            testCompressed.onerror = function() {
+                console.warn('압축된 이미지 로드 실패, 원본 사용:', file.name);
+                // 압축 실패 시 원본 사용
+                addImageData({
+                    id: Date.now() + Math.random().toString(36).substr(2, 9),
+                    name: file.name,
+                    src: originalDataUrl,
+                    originalSize: file.size,
+                    compressedSize: originalDataUrl.length,
+                    type: file.type || 'image/jpeg',
+                    width: originalImg.width,
+                    height: originalImg.height
+                });
+            };
+            testCompressed.src = compressedDataUrl;
+        } else {
+            throw new Error('압축된 데이터가 유효하지 않음');
         }
         
-        const imageData = {
+    } catch (error) {
+        console.warn('이미지 압축 실패, 원본 사용:', error);
+        // 압축 실패 시 원본 사용
+        addImageData({
             id: Date.now() + Math.random().toString(36).substr(2, 9),
             name: file.name,
-            src: compressedDataUrl,
+            src: originalDataUrl,
             originalSize: file.size,
-            compressedSize: compressedDataUrl.length,
-            type: 'image/jpeg',
-            width: width,
-            height: height
-        };
-        
-        addImageData(imageData);
-        
+            compressedSize: originalDataUrl.length,
+            type: file.type || 'image/jpeg',
+            width: originalImg.width,
+            height: originalImg.height
+        });
+    } finally {
         // 메모리 정리
         canvas.width = 0;
         canvas.height = 0;
-    };
-    
-    img.onerror = function() {
-        console.error('이미지 로드 실패:', file.name);
-        alert('이미지 로드에 실패했습니다: ' + file.name);
-    };
-    
-    // FileReader로 이미지 로드
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        img.src = e.target.result;
-    };
-    reader.onerror = function() {
-        console.error('파일 읽기 실패:', file.name);
-        alert('파일 읽기에 실패했습니다: ' + file.name);
-    };
-    reader.readAsDataURL(file);
+    }
 }
 
 // 이미지 데이터 추가 (공통 함수)
 function addImageData(imageData) {
-    // 데이터 크기 체크 (2MB 제한)
-    if (imageData.src.length > 2 * 1024 * 1024) {
+    // 데이터 유효성 검사
+    if (!imageData || !imageData.src || !imageData.id || !imageData.name) {
+        console.error('이미지 데이터가 유효하지 않습니다:', imageData);
+        return;
+    }
+    
+    // Base64 데이터 URL 형식 검사
+    if (!imageData.src.startsWith('data:image/')) {
+        console.error('잘못된 이미지 형식:', imageData.name);
+        return;
+    }
+    
+    // 데이터 크기 체크 (1.5MB 제한으로 더 보수적으로 설정)
+    if (imageData.src.length > 1.5 * 1024 * 1024) {
         alert('이미지가 너무 큽니다. 더 작은 이미지를 선택해주세요.');
         return;
+    }
+    
+    // 중복 ID 체크
+    const existingIndex = uploadedImages.findIndex(img => img.id === imageData.id);
+    if (existingIndex !== -1) {
+        console.warn('중복된 이미지 ID:', imageData.id);
+        imageData.id = Date.now() + Math.random().toString(36).substr(2, 9);
     }
     
     uploadedImages.push(imageData);
@@ -268,13 +264,8 @@ function createImageElement(imageData) {
         <button class="remove-btn" onclick="removeImage('${imageData.id}')">×</button>
     `;
     
-    // 이미지 클릭 시 선택 모달 열기
-    const imgElement = imageItem.querySelector('img');
-    imgElement.addEventListener('click', () => {
-        openImageSelectionModal();
-    });
-    
     // 이미지 로드 에러 처리
+    const imgElement = imageItem.querySelector('img');
     imgElement.addEventListener('error', function() {
         console.error('이미지 로드 실패:', imageData.name);
         this.style.display = 'none';
@@ -329,8 +320,15 @@ function updateUploadArea() {
 // 로컬 스토리지에 이미지 저장
 function saveImagesToStorage() {
     try {
-        // 이미지 데이터 검증 및 정리
-        const cleanedImages = uploadedImages.map(img => ({
+        // 이미지 데이터 검증 및 정리 (더 엄격한 검증)
+        const cleanedImages = uploadedImages.filter(img => {
+            return img && 
+                   img.src && 
+                   img.src.startsWith('data:image/') && 
+                   img.src.length > 100 &&
+                   img.id && 
+                   img.name;
+        }).map(img => ({
             id: img.id,
             name: img.name,
             src: img.src,
@@ -339,10 +337,15 @@ function saveImagesToStorage() {
             height: img.height || 0
         }));
         
+        if (cleanedImages.length === 0) {
+            console.warn('저장할 유효한 이미지가 없습니다.');
+            return;
+        }
+        
         const dataToSave = JSON.stringify(cleanedImages);
         
-        // LocalStorage 용량 체크 (3MB 제한으로 더 보수적으로 설정)
-        if (dataToSave.length > 3 * 1024 * 1024) {
+        // LocalStorage 용량 체크 (2MB 제한으로 더 보수적으로 설정)
+        if (dataToSave.length > 2 * 1024 * 1024) {
             console.warn('이미지 데이터가 너무 큽니다. 일부 이미지를 제거하세요.');
             alert('이미지가 너무 많습니다. 일부 이미지를 제거해주세요.');
             return;
@@ -396,188 +399,9 @@ function toggleMusic() {
     }
 }
 
-// 공유하기 기능
-function handleShare() {
-    // 이미지가 없으면 알림
-    if (uploadedImages.length === 0) {
-        alert('공유할 이미지가 없습니다. 먼저 이미지를 업로드해주세요.');
-        return;
-    }
-    
-    // 이미지 선택 모달 열기
-    openImageSelectionModal();
-}
 
-// 이미지 선택 모달 열기
-function openImageSelectionModal() {
-    // 모달에 이미지들 표시
-    populateImageSelectionModal();
-    
-    // 모달 표시
-    imageSelectionModal.style.display = 'block';
-    document.body.style.overflow = 'hidden'; // 스크롤 방지
-}
 
-// 이미지 선택 모달 닫기
-function closeImageSelectionModal() {
-    imageSelectionModal.style.display = 'none';
-    document.body.style.overflow = 'auto'; // 스크롤 복원
-    selectedImagesForShare = []; // 선택 초기화
-}
 
-// 모달에 이미지들 표시
-function populateImageSelectionModal() {
-    imageSelectionGrid.innerHTML = '';
-    
-    uploadedImages.forEach(imageData => {
-        const selectionItem = document.createElement('div');
-        selectionItem.className = 'selection-image-item';
-        selectionItem.dataset.id = imageData.id;
-        
-        selectionItem.innerHTML = `
-            <img src="${imageData.src}" alt="${imageData.name}">
-            <div class="selection-checkbox">✓</div>
-        `;
-        
-        // 이미지 클릭 시 선택/해제
-        selectionItem.addEventListener('click', () => {
-            toggleImageSelection(imageData.id, selectionItem);
-        });
-        
-        imageSelectionGrid.appendChild(selectionItem);
-    });
-    
-    // 선택 완료 버튼 상태 업데이트
-    updateConfirmButton();
-}
-
-// 이미지 선택/해제 토글
-function toggleImageSelection(imageId, element) {
-    const index = selectedImagesForShare.indexOf(imageId);
-    
-    if (index > -1) {
-        // 선택 해제
-        selectedImagesForShare.splice(index, 1);
-        element.classList.remove('selected');
-    } else {
-        // 선택
-        selectedImagesForShare.push(imageId);
-        element.classList.add('selected');
-    }
-    
-    updateConfirmButton();
-}
-
-// 확인 버튼 상태 업데이트
-function updateConfirmButton() {
-    confirmSelection.disabled = selectedImagesForShare.length === 0;
-}
-
-// 이미지 선택 확인
-function confirmImageSelection() {
-    if (selectedImagesForShare.length === 0) {
-        alert('공유할 이미지를 선택해주세요.');
-        return;
-    }
-    
-    // 선택된 이미지들로 공유 실행
-    shareSelectedImages();
-    closeImageSelectionModal();
-}
-
-// 선택된 이미지들로 공유
-function shareSelectedImages() {
-    // 선택된 이미지들의 데이터 가져오기
-    const selectedImageData = uploadedImages.filter(img => 
-        selectedImagesForShare.includes(img.id)
-    );
-    
-    if (selectedImageData.length === 0) {
-        alert('공유할 이미지를 선택해주세요.');
-        return;
-    }
-    
-    try {
-        // 선택된 이미지들을 임시 저장
-        const tempKey = 'tempSharedImages_' + Date.now();
-        const dataToSave = JSON.stringify(selectedImageData);
-        
-        // 데이터 크기 체크 (2MB 제한으로 더 보수적으로 설정)
-        if (dataToSave.length > 2 * 1024 * 1024) {
-            alert('선택된 이미지가 너무 큽니다. 더 적은 이미지를 선택해주세요.');
-            return;
-        }
-        
-        // 이미지 데이터 유효성 검사
-        const validImages = selectedImageData.filter(img => {
-            return img && img.src && img.src.startsWith('data:image/') && img.src.length > 100;
-        });
-        
-        if (validImages.length === 0) {
-            alert('유효한 이미지가 없습니다. 이미지를 다시 업로드해주세요.');
-            return;
-        }
-        
-        // 유효한 이미지만 저장
-        const validDataToSave = JSON.stringify(validImages);
-        localStorage.setItem(tempKey, validDataToSave);
-        
-        // 공유 URL 생성 (선택된 이미지 정보 포함)
-        const shareUrl = window.location.origin + window.location.pathname + 
-                        `?shared=true&images=${tempKey}&count=${validImages.length}`;
-        
-        // Web Share API 사용 (모바일에서 네이티브 공유)
-        if (navigator.share) {
-            navigator.share({
-                title: '서비스 장례준비',
-                text: `선택된 ${validImages.length}개의 이미지와 함께 마지막 여정을 위한 준비`,
-                url: shareUrl
-            }).catch(err => {
-                console.log('공유 실패:', err);
-                copyToClipboard(shareUrl);
-            });
-        } else {
-            // Web Share API가 지원되지 않는 경우 클립보드에 복사
-            copyToClipboard(shareUrl);
-        }
-        
-        console.log('공유 URL 생성 완료:', shareUrl);
-        
-    } catch (error) {
-        console.error('공유 URL 생성 중 오류:', error);
-        alert('공유 URL 생성 중 오류가 발생했습니다.');
-    }
-}
-
-// 클립보드에 복사
-function copyToClipboard(text) {
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(() => {
-            alert('링크가 클립보드에 복사되었습니다.');
-        }).catch(err => {
-            console.log('클립보드 복사 실패:', err);
-            fallbackCopyToClipboard(text);
-        });
-    } else {
-        fallbackCopyToClipboard(text);
-    }
-}
-
-// 폴백 클립보드 복사
-function fallbackCopyToClipboard(text) {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-        document.execCommand('copy');
-        alert('링크가 클립보드에 복사되었습니다.');
-    } catch (err) {
-        console.log('폴백 복사 실패:', err);
-        alert('링크: ' + text);
-    }
-    document.body.removeChild(textArea);
-}
 
 // 모든 이미지 지우기
 function clearAllImages() {
@@ -603,124 +427,9 @@ function loadSavedImages() {
     }
 }
 
-// 공유된 이미지들 로드
-function loadSharedImages(imagesKey, imageCount) {
-    try {
-        const sharedImages = localStorage.getItem(imagesKey);
-        if (sharedImages) {
-            const parsedImages = JSON.parse(sharedImages);
-            
-            // 이미지 데이터 검증 (더 엄격한 검증)
-            const validImages = parsedImages.filter(img => {
-                return img && 
-                       img.src && 
-                       img.src.startsWith('data:image/') && 
-                       img.src.length > 100 &&
-                       img.id && 
-                       img.name;
-            });
-            
-            if (validImages.length === 0) {
-                throw new Error('유효한 이미지가 없습니다.');
-            }
-            
-            // 이미지 로드 테스트
-            const loadPromises = validImages.map(img => {
-                return new Promise((resolve, reject) => {
-                    const testImg = new Image();
-                    testImg.onload = () => resolve(img);
-                    testImg.onerror = () => reject(new Error(`이미지 로드 실패: ${img.name}`));
-                    testImg.src = img.src;
-                });
-            });
-            
-            Promise.all(loadPromises)
-                .then(loadableImages => {
-                    uploadedImages = loadableImages;
-                    
-                    // 이미지 요소 생성 전에 갤러리 초기화
-                    imageGallery.innerHTML = '';
-                    
-                    uploadedImages.forEach(imageData => {
-                        createImageElement(imageData);
-                    });
-                    updateUploadArea();
-                    
-                    // 임시 저장된 이미지들 정리 (24시간 후 자동 삭제)
-                    setTimeout(() => {
-                        try {
-                            localStorage.removeItem(imagesKey);
-                            console.log('임시 공유 이미지 정리 완료:', imagesKey);
-                        } catch (e) {
-                            console.warn('임시 데이터 정리 실패:', e);
-                        }
-                    }, 24 * 60 * 60 * 1000);
-                    
-                    console.log(`${loadableImages.length}개의 공유된 이미지가 로드되었습니다.`);
-                    
-                    // 성공 메시지 표시
-                    showNotification(`${loadableImages.length}개의 이미지가 공유되었습니다.`);
-                })
-                .catch(error => {
-                    console.warn('이미지 로드 테스트 실패:', error);
-                    showNotification('일부 이미지를 로드할 수 없습니다.');
-                    loadSavedImages(); // 폴백으로 저장된 이미지 로드
-                });
-            
-        } else {
-            console.warn('공유된 이미지를 찾을 수 없습니다.');
-            showNotification('공유된 이미지를 찾을 수 없습니다.');
-            loadSavedImages(); // 폴백으로 저장된 이미지 로드
-        }
-    } catch (error) {
-        console.warn('공유된 이미지 로드 중 오류가 발생했습니다:', error);
-        showNotification('이미지 로드 중 오류가 발생했습니다.');
-        loadSavedImages(); // 폴백으로 저장된 이미지 로드
-    }
-}
 
-// 알림 메시지 표시
-function showNotification(message) {
-    // 기존 알림 제거
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
-    
-    // 새 알림 생성
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.textContent = message;
-    
-    // 스타일 적용
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 12px 20px;
-        border-radius: 6px;
-        z-index: 3000;
-        font-family: 'Noto Sans KR', sans-serif;
-        font-size: 14px;
-        animation: slideInRight 0.3s ease;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // 3초 후 자동 제거
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 300);
-        }
-    }, 3000);
-}
+
+
 
 // 장례준비 버튼 처리
 function handleFuneralPrep() {
