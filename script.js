@@ -14,8 +14,13 @@ let uploadedImages = [];
 document.addEventListener('DOMContentLoaded', function() {
     initializeEventListeners();
     
-    // 저장된 이미지 로드
-    loadSavedImages();
+    // 새로고침 시 이전 이미지 삭제
+    clearAllImages();
+});
+
+// 페이지를 떠날 때 이미지 정리
+window.addEventListener('beforeunload', function() {
+    clearAllImages();
 });
 
 // 이벤트 리스너 초기화
@@ -539,8 +544,9 @@ function handleSwipe() {
 // 페이지 가시성 변경 시 처리
 document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
-        // 페이지가 숨겨질 때 애니메이션 일시정지
+        // 페이지가 숨겨질 때 애니메이션 일시정지 및 이미지 정리
         document.body.style.animationPlayState = 'paused';
+        clearAllImages();
     } else {
         // 페이지가 다시 보일 때 애니메이션 재개
         document.body.style.animationPlayState = 'running';
