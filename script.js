@@ -8,8 +8,16 @@ const metalDoor = document.getElementById('metalDoor');
 const mainContent = document.getElementById('mainContent');
 const musicToggle = document.getElementById('musicToggle');
 
+// 모달 관련 요소들
+const imageSelectionModal = document.getElementById('imageSelectionModal');
+const imageSelectionGrid = document.getElementById('imageSelectionGrid');
+const modalClose = document.getElementById('modalClose');
+const cancelSelection = document.getElementById('cancelSelection');
+const confirmSelection = document.getElementById('confirmSelection');
+
 // 이미지 업로드 관련 변수
 let uploadedImages = [];
+let selectedImagesForShare = []; // 공유용 선택된 이미지들
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
@@ -18,8 +26,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // URL 파라미터 확인
     const urlParams = new URLSearchParams(window.location.search);
     const shared = urlParams.get('shared');
+    const sharedImagesKey = urlParams.get('images');
+    const sharedImageCount = urlParams.get('count');
     
     if (shared === 'true') {
+        if (sharedImagesKey && sharedImageCount) {
+            // 선택된 이미지들과 함께 공유된 링크
+            loadSharedImages(sharedImagesKey, parseInt(sharedImageCount));
+        } else {
+            // 일반 공유 링크
+            loadSavedImages();
+        }
+        
         // 공유된 링크로 접근한 경우 바로 철문 애니메이션 시작
         setTimeout(() => {
             startDoorAnimation();
@@ -51,6 +69,25 @@ function initializeEventListeners() {
     
     // 음악 컨트롤
     musicToggle.addEventListener('click', toggleMusic);
+    
+    // 모달 관련 이벤트 리스너
+    modalClose.addEventListener('click', closeImageSelectionModal);
+    cancelSelection.addEventListener('click', closeImageSelectionModal);
+    confirmSelection.addEventListener('click', confirmImageSelection);
+    
+    // 모달 외부 클릭 시 닫기
+    imageSelectionModal.addEventListener('click', (e) => {
+        if (e.target === imageSelectionModal) {
+            closeImageSelectionModal();
+        }
+    });
+    
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && imageSelectionModal.style.display === 'block') {
+            closeImageSelectionModal();
+        }
+    });
 }
 
 // 이미지 업로드 처리
@@ -125,6 +162,12 @@ function createImageElement(imageData) {
         <button class="remove-btn" onclick="removeImage('${imageData.id}')">×</button>
     `;
     
+    // 이미지 클릭 시 선택 모달 열기
+    const imgElement = imageItem.querySelector('img');
+    imgElement.addEventListener('click', () => {
+        openImageSelectionModal();
+    });
+    
     imageGallery.appendChild(imageItem);
     
     // 이미지 로드 애니메이션
@@ -193,17 +236,113 @@ function toggleMusic() {
 
 // 공유하기 기능
 function handleShare() {
-    // 현재 이미지들을 로컬 스토리지에 저장
-    saveImagesToStorage();
+    // 이미지가 없으면 알림
+    if (uploadedImages.length === 0) {
+        alert('공유할 이미지가 없습니다. 먼저 이미지를 업로드해주세요.');
+        return;
+    }
     
-    // 공유 URL 생성
-    const shareUrl = window.location.origin + window.location.pathname + '?shared=true';
+    // 이미지 선택 모달 열기
+    openImageSelectionModal();
+}
+
+// 이미지 선택 모달 열기
+function openImageSelectionModal() {
+    // 모달에 이미지들 표시
+    populateImageSelectionModal();
+    
+    // 모달 표시
+    imageSelectionModal.style.display = 'block';
+    document.body.style.overflow = 'hidden'; // 스크롤 방지
+}
+
+// 이미지 선택 모달 닫기
+function closeImageSelectionModal() {
+    imageSelectionModal.style.display = 'none';
+    document.body.style.overflow = 'auto'; // 스크롤 복원
+    selectedImagesForShare = []; // 선택 초기화
+}
+
+// 모달에 이미지들 표시
+function populateImageSelectionModal() {
+    imageSelectionGrid.innerHTML = '';
+    
+    uploadedImages.forEach(imageData => {
+        const selectionItem = document.createElement('div');
+        selectionItem.className = 'selection-image-item';
+        selectionItem.dataset.id = imageData.id;
+        
+        selectionItem.innerHTML = `
+            <img src="${imageData.src}" alt="${imageData.name}">
+            <div class="selection-checkbox">✓</div>
+        `;
+        
+        // 이미지 클릭 시 선택/해제
+        selectionItem.addEventListener('click', () => {
+            toggleImageSelection(imageData.id, selectionItem);
+        });
+        
+        imageSelectionGrid.appendChild(selectionItem);
+    });
+    
+    // 선택 완료 버튼 상태 업데이트
+    updateConfirmButton();
+}
+
+// 이미지 선택/해제 토글
+function toggleImageSelection(imageId, element) {
+    const index = selectedImagesForShare.indexOf(imageId);
+    
+    if (index > -1) {
+        // 선택 해제
+        selectedImagesForShare.splice(index, 1);
+        element.classList.remove('selected');
+    } else {
+        // 선택
+        selectedImagesForShare.push(imageId);
+        element.classList.add('selected');
+    }
+    
+    updateConfirmButton();
+}
+
+// 확인 버튼 상태 업데이트
+function updateConfirmButton() {
+    confirmSelection.disabled = selectedImagesForShare.length === 0;
+}
+
+// 이미지 선택 확인
+function confirmImageSelection() {
+    if (selectedImagesForShare.length === 0) {
+        alert('공유할 이미지를 선택해주세요.');
+        return;
+    }
+    
+    // 선택된 이미지들로 공유 실행
+    shareSelectedImages();
+    closeImageSelectionModal();
+}
+
+// 선택된 이미지들로 공유
+function shareSelectedImages() {
+    // 선택된 이미지들의 데이터 가져오기
+    const selectedImageData = uploadedImages.filter(img => 
+        selectedImagesForShare.includes(img.id)
+    );
+    
+    // 선택된 이미지들을 임시 저장
+    const tempKey = 'tempSharedImages_' + Date.now();
+    localStorage.setItem(tempKey, JSON.stringify(selectedImageData));
+    
+    // 공유 URL 생성 (선택된 이미지 정보 포함)
+    const shareUrl = window.location.origin + window.location.pathname + 
+                    `?shared=true&images=${tempKey}&count=${selectedImageData.length}`;
     
     // Web Share API 사용 (모바일에서 네이티브 공유)
     if (navigator.share) {
         navigator.share({
             title: '서비스 장례준비',
-            text: '마지막 여정을 위한 준비',
+            text: `선택된 ${selectedImageData.length}개의 이미지와 함께 마지막 여정을 위한 준비`,
             url: shareUrl
         }).catch(err => {
             console.log('공유 실패:', err);
@@ -266,6 +405,33 @@ function loadSavedImages() {
         }
     } catch (error) {
         console.warn('저장된 이미지 로드 중 오류가 발생했습니다:', error);
+    }
+}
+
+// 공유된 이미지들 로드
+function loadSharedImages(imagesKey, imageCount) {
+    try {
+        const sharedImages = localStorage.getItem(imagesKey);
+        if (sharedImages) {
+            uploadedImages = JSON.parse(sharedImages);
+            uploadedImages.forEach(imageData => {
+                createImageElement(imageData);
+            });
+            updateUploadArea();
+            
+            // 임시 저장된 이미지들 정리 (24시간 후 자동 삭제)
+            setTimeout(() => {
+                localStorage.removeItem(imagesKey);
+            }, 24 * 60 * 60 * 1000);
+            
+            console.log(`${imageCount}개의 공유된 이미지가 로드되었습니다.`);
+        } else {
+            console.warn('공유된 이미지를 찾을 수 없습니다.');
+            loadSavedImages(); // 폴백으로 저장된 이미지 로드
+        }
+    } catch (error) {
+        console.warn('공유된 이미지 로드 중 오류가 발생했습니다:', error);
+        loadSavedImages(); // 폴백으로 저장된 이미지 로드
     }
 }
 
