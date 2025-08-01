@@ -14,8 +14,17 @@ let uploadedImages = [];
 document.addEventListener('DOMContentLoaded', function() {
     initializeEventListeners();
     
-    // 새로고침 시 이전 이미지 삭제
+    // 새로고침 시 이전 이미지 삭제 및 업로드 영역 초기화
     clearAllImages();
+    
+    // 업로드 영역이 확실히 표시되도록 강제 업데이트
+    setTimeout(() => {
+        updateUploadArea();
+        // 추가로 업로드 영역 강제 표시
+        uploadArea.style.display = 'block';
+        uploadArea.style.visibility = 'visible';
+        uploadArea.style.opacity = '1';
+    }, 100);
 });
 
 // 페이지를 떠날 때 이미지 정리
@@ -309,16 +318,13 @@ function removeImage(imageId) {
 function updateUploadArea() {
     if (uploadedImages.length > 0) {
         uploadArea.style.display = 'none';
+        uploadArea.style.visibility = 'hidden';
     } else {
         uploadArea.style.display = 'block';
-        // 업로드 영역이 다시 나타날 때 애니메이션 효과
-        uploadArea.style.opacity = '0';
-        uploadArea.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-            uploadArea.style.transition = 'all 0.5s ease';
-            uploadArea.style.opacity = '1';
-            uploadArea.style.transform = 'translateY(0)';
-        }, 100);
+        uploadArea.style.visibility = 'visible';
+        uploadArea.style.opacity = '1';
+        uploadArea.style.transform = 'translateY(0)';
+        uploadArea.style.transition = 'all 0.3s ease';
     }
 }
 
@@ -413,6 +419,13 @@ function clearAllImages() {
     uploadedImages = [];
     imageGallery.innerHTML = '';
     localStorage.removeItem('funeralServiceImages');
+    
+    // 업로드 영역 강제 표시
+    uploadArea.style.display = 'block';
+    uploadArea.style.opacity = '1';
+    uploadArea.style.transform = 'translateY(0)';
+    uploadArea.style.transition = 'all 0.3s ease';
+    
     updateUploadArea();
 }
 
@@ -572,4 +585,13 @@ function lazyLoadImages() {
 }
 
 // 페이지 로드 완료 후 지연 로딩 초기화
-window.addEventListener('load', lazyLoadImages); 
+window.addEventListener('load', function() {
+    lazyLoadImages();
+    
+    // 페이지 로드 완료 후 업로드 영역 최종 확인
+    if (uploadedImages.length === 0) {
+        uploadArea.style.display = 'block';
+        uploadArea.style.visibility = 'visible';
+        uploadArea.style.opacity = '1';
+    }
+}); 
