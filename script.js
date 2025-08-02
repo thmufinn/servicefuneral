@@ -71,9 +71,9 @@ function handleImageUpload(event) {
     if (files.length > 0) {
         Array.from(files).forEach(file => {
             if (file.type.startsWith('image/')) {
-                // 파일 크기 체크 (5MB 제한으로 더 보수적으로 설정)
-                if (file.size > 5 * 1024 * 1024) {
-                    alert(`파일이 너무 큽니다: ${file.name}\n5MB 이하의 이미지를 선택해주세요.`);
+                // 파일 크기 체크 (10MB로 증가)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`파일이 너무 큽니다: ${file.name}\n10MB 이하의 이미지를 선택해주세요.`);
                     return;
                 }
                 compressAndAddImage(file);
@@ -105,9 +105,9 @@ function handleDrop(event) {
     if (files.length > 0) {
         Array.from(files).forEach(file => {
             if (file.type.startsWith('image/')) {
-                // 파일 크기 체크 (5MB 제한으로 더 보수적으로 설정)
-                if (file.size > 5 * 1024 * 1024) {
-                    alert(`파일이 너무 큽니다: ${file.name}\n5MB 이하의 이미지를 선택해주세요.`);
+                // 파일 크기 체크 (10MB로 증가)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`파일이 너무 큽니다: ${file.name}\n10MB 이하의 이미지를 선택해주세요.`);
                     return;
                 }
                 compressAndAddImage(file);
@@ -151,33 +151,15 @@ function compressAndAddImage(file) {
     reader.readAsDataURL(file);
 }
 
-// 이미지 압축 시도
+// 이미지 압축 시도 (원본 해상도 보존)
 function tryCompressImage(file, originalDataUrl, originalImg) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
-    // 더 보수적인 크기 제한 (500px)
-    const maxSize = 500;
+    // 원본 해상도 보존
     let { width, height } = originalImg;
     
-    // 비율 유지하면서 크기 조정
-    if (width > height) {
-        if (width > maxSize) {
-            height = Math.round((height * maxSize) / width);
-            width = maxSize;
-        }
-    } else {
-        if (height > maxSize) {
-            width = Math.round((width * maxSize) / height);
-            height = maxSize;
-        }
-    }
-    
-    // 최소 크기 보장
-    if (width < 100) width = 100;
-    if (height < 100) height = 100;
-    
-    // 캔버스 설정
+    // 캔버스 설정 (원본 크기 유지)
     canvas.width = width;
     canvas.height = height;
     
@@ -186,11 +168,11 @@ function tryCompressImage(file, originalDataUrl, originalImg) {
     ctx.imageSmoothingQuality = 'high';
     
     try {
-        // 이미지 그리기
+        // 이미지 그리기 (원본 크기 그대로)
         ctx.drawImage(originalImg, 0, 0, width, height);
         
-        // 압축 시도 (더 높은 품질로)
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        // 고품질 압축 (품질 0.95로 높임)
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
         
         // 압축된 데이터 유효성 검사
         if (compressedDataUrl && compressedDataUrl.length > 100) {
@@ -261,8 +243,8 @@ function addImageData(imageData) {
         return;
     }
     
-    // 데이터 크기 체크 (1.5MB 제한으로 더 보수적으로 설정)
-    if (imageData.src.length > 1.5 * 1024 * 1024) {
+    // 데이터 크기 체크 (5MB로 증가)
+    if (imageData.src.length > 5 * 1024 * 1024) {
         alert('이미지가 너무 큽니다. 더 작은 이미지를 선택해주세요.');
         return;
     }
@@ -368,8 +350,8 @@ function saveImagesToStorage() {
         
         const dataToSave = JSON.stringify(cleanedImages);
         
-        // LocalStorage 용량 체크 (2MB 제한으로 더 보수적으로 설정)
-        if (dataToSave.length > 2 * 1024 * 1024) {
+        // LocalStorage 용량 체크 (5MB로 증가)
+        if (dataToSave.length > 5 * 1024 * 1024) {
             console.warn('이미지 데이터가 너무 큽니다. 일부 이미지를 제거하세요.');
             alert('이미지가 너무 많습니다. 일부 이미지를 제거해주세요.');
             return;
