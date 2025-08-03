@@ -107,7 +107,7 @@ function handleDrop(event) {
             if (file.type.startsWith('image/')) {
                 // 파일 크기 체크 (10MB로 증가)
                 if (file.size > 10 * 1024 * 1024) {
-                    alert(`파일이 너무 큽니다: ${file.name}\n10MB 이하의 이미지를 선택해주세요.`);
+                    alert(`File is too large: ${file.name}\nPlease select an image under 10MB.`);
                     return;
                 }
                 compressAndAddImage(file);
@@ -137,15 +137,15 @@ function compressAndAddImage(file) {
             tryCompressImage(file, originalDataUrl, testImg);
         };
         testImg.onerror = function() {
-            console.error('원본 이미지 로드 실패:', file.name);
-            alert('이미지 파일이 손상되었습니다: ' + file.name);
+            console.error('Original image load failed:', file.name);
+            alert('Image file is corrupted: ' + file.name);
         };
         testImg.src = originalDataUrl;
     };
     
     reader.onerror = function() {
-        console.error('파일 읽기 실패:', file.name);
-        alert('파일을 읽을 수 없습니다: ' + file.name);
+        console.error('File read failed:', file.name);
+        alert('Cannot read file: ' + file.name);
     };
     
     reader.readAsDataURL(file);
@@ -191,7 +191,7 @@ function tryCompressImage(file, originalDataUrl, originalImg) {
                 });
             };
             testCompressed.onerror = function() {
-                console.warn('압축된 이미지 로드 실패, 원본 사용:', file.name);
+                console.warn('Compressed image load failed, using original:', file.name);
                 // 압축 실패 시 원본 사용
                 addImageData({
                     id: Date.now() + Math.random().toString(36).substr(2, 9),
@@ -210,7 +210,7 @@ function tryCompressImage(file, originalDataUrl, originalImg) {
         }
         
     } catch (error) {
-        console.warn('이미지 압축 실패, 원본 사용:', error);
+        console.warn('Image compression failed, using original:', error);
         // 압축 실패 시 원본 사용
         addImageData({
             id: Date.now() + Math.random().toString(36).substr(2, 9),
@@ -245,7 +245,7 @@ function addImageData(imageData) {
     
     // 데이터 크기 체크 (5MB로 증가)
     if (imageData.src.length > 5 * 1024 * 1024) {
-        alert('이미지가 너무 큽니다. 더 작은 이미지를 선택해주세요.');
+        alert('Image is too large. Please select a smaller image.');
         return;
     }
     
@@ -276,9 +276,9 @@ function createImageElement(imageData) {
     // 이미지 로드 에러 처리
     const imgElement = imageItem.querySelector('img');
     imgElement.addEventListener('error', function() {
-        console.error('이미지 로드 실패:', imageData.name);
+        console.error('Image load failed:', imageData.name);
         this.style.display = 'none';
-        imageItem.innerHTML += '<div class="image-error">이미지를 불러올 수 없습니다</div>';
+        imageItem.innerHTML += '<div class="image-error">Cannot load image</div>';
     });
     
     imageGallery.appendChild(imageItem);
@@ -344,7 +344,7 @@ function saveImagesToStorage() {
         }));
         
         if (cleanedImages.length === 0) {
-            console.warn('저장할 유효한 이미지가 없습니다.');
+            console.warn('No valid images to save.');
             return;
         }
         
@@ -352,19 +352,19 @@ function saveImagesToStorage() {
         
         // LocalStorage 용량 체크 (5MB로 증가)
         if (dataToSave.length > 5 * 1024 * 1024) {
-            console.warn('이미지 데이터가 너무 큽니다. 일부 이미지를 제거하세요.');
-            alert('이미지가 너무 많습니다. 일부 이미지를 제거해주세요.');
+            console.warn('Image data is too large. Please remove some images.');
+            alert('Too many images. Please remove some images.');
             return;
         }
         
         localStorage.setItem('funeralServiceImages', dataToSave);
-        console.log('이미지 저장 완료:', cleanedImages.length, '개');
+        console.log('Images saved successfully:', cleanedImages.length, 'items');
     } catch (error) {
-        console.warn('이미지 저장 중 오류가 발생했습니다:', error);
+        console.warn('Error occurred while saving images:', error);
         
         // LocalStorage 용량 부족 시 오래된 데이터 정리
         if (error.name === 'QuotaExceededError') {
-            alert('저장 공간이 부족합니다. 일부 이미지를 제거해주세요.');
+            alert('Storage space is insufficient. Please remove some images.');
             cleanupOldStorageData();
         }
     }
@@ -387,9 +387,9 @@ function cleanupOldStorageData() {
             localStorage.removeItem(key);
         });
         
-        console.log('오래된 임시 데이터 정리 완료:', keysToRemove.length, '개');
+        console.log('Old temporary data cleanup completed:', keysToRemove.length, 'items');
     } catch (error) {
-        console.warn('데이터 정리 중 오류:', error);
+        console.warn('Error during data cleanup:', error);
     }
 }
 
@@ -415,8 +415,8 @@ async function toggleMusic() {
             musicToggle.classList.remove('playing');
         }
     } catch (error) {
-        console.error('음악 토글 실패:', error);
-        alert('음악 재생에 실패했습니다. 다시 시도해주세요.');
+        console.error('Music toggle failed:', error);
+        alert('Failed to play music. Please try again.');
     }
 }
 
@@ -451,7 +451,7 @@ function loadSavedImages() {
             updateUploadArea();
         }
     } catch (error) {
-        console.warn('저장된 이미지 로드 중 오류가 발생했습니다:', error);
+        console.warn('Error occurred while loading saved images:', error);
     }
 }
 
@@ -463,13 +463,13 @@ function loadSavedImages() {
 async function handleFuneralPrep() {
     // 이미지가 없으면 알림
     if (uploadedImages.length === 0) {
-        alert('먼저 이미지를 업로드해주세요.');
+        alert('Please upload images first.');
         return;
     }
     
     // 버튼 비활성화
     funeralPrepBtn.disabled = true;
-    funeralPrepBtn.textContent = '준비 중...';
+    funeralPrepBtn.textContent = 'Preparing...';
     
     try {
         // 사용자 상호작용 감지
@@ -487,7 +487,7 @@ async function handleFuneralPrep() {
             musicToggle.classList.add('playing');
         }
     } catch (error) {
-        console.error('음악 재생 실패:', error);
+        console.error('Music playback failed:', error);
         // 음악 재생에 실패해도 계속 진행
     }
     
@@ -515,7 +515,7 @@ function startDoorAnimation() {
         // 철문이 완전히 내려온 후 텍스트 변경 및 충돌 효과
         setTimeout(() => {
             const doorText = metalDoor.querySelector('.door-text');
-            doorText.innerHTML = '<div class="text-line">장례 준비를</div><div class="text-line">시작합니다</div>';
+            doorText.innerHTML = '<div class="text-line">Starting</div><div class="text-line">funeral preparation</div>';
             doorText.style.fontSize = '1.2rem';
             
             // 철문 충돌 효과 추가
@@ -563,7 +563,7 @@ function playDoorImpactSound() {
         }, 300);
         
     } catch (error) {
-        console.log('철문 충돌 소리 재생 실패:', error);
+        console.log('Door impact sound playback failed:', error);
     }
 }
 
@@ -571,14 +571,14 @@ function playDoorImpactSound() {
 function resetDoor() {
     metalDoor.classList.remove('door-down');
     
-    setTimeout(() => {
-        funeralPrepBtn.disabled = false;
-        funeralPrepBtn.textContent = '장례준비';
-        
-        const doorText = metalDoor.querySelector('.door-text');
-        doorText.innerHTML = '<div class="text-line">그동안 감사했습니다.</div>';
-        doorText.style.fontSize = '2.5rem';
-    }, 25000);
+            setTimeout(() => {
+            funeralPrepBtn.disabled = false;
+            funeralPrepBtn.textContent = 'Prepare Funeral';
+            
+            const doorText = metalDoor.querySelector('.door-text');
+            doorText.innerHTML = '<div class="text-line">Thank you for everything.</div>';
+            doorText.style.fontSize = '2.5rem';
+        }, 25000);
 }
 
 // 키보드 단축키
