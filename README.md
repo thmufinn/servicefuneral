@@ -1,102 +1,102 @@
-# 서비스 장례준비 웹사이트
+# Service Funeral Preparation Website
 
-장례 서비스를 위한 모바일 친화적인 웹 애플리케이션입니다.
+A mobile-friendly web application for funeral services.
 
-## 주요 기능
+## Key Features
 
-### 📱 모바일 최적화
-- 반응형 디자인으로 모든 디바이스에서 최적화된 경험 제공
-- 터치 제스처 지원 (스와이프 기능)
-- 모바일 친화적인 UI/UX
+### 📱 Mobile Optimization
+- Responsive design providing optimized experience on all devices
+- Touch gesture support (swipe functionality)
+- Mobile-friendly UI/UX
 
-### 🖼️ 이미지 관리
-- 드래그 앤 드롭으로 이미지 업로드
-- 클릭으로 이미지 선택
-- 업로드된 이미지 갤러리 표시
-- 개별 이미지 삭제 기능
-- 로컬 스토리지에 이미지 자동 저장
+### 🖼️ Image Management
+- Drag and drop image upload
+- Click to select images
+- Display uploaded image gallery
+- Individual image deletion
+- Automatic image saving to local storage
 
-### 🚪 철문 애니메이션
-- "장례준비" 버튼 클릭 시 위에서 철문이 천천히 내려오는 애니메이션
-- 3초간의 부드러운 애니메이션 효과
-- 철문 클릭 또는 ESC 키로 원래 상태 복원
+### 🚪 Metal Door Animation
+- Metal door slowly descends from above when "Prepare Funeral" button is clicked
+- 3-second smooth animation effect
+- Restore original state by clicking the door or pressing ESC key
 
-### 🎨 디자인
-- 장례에 맞는 어두운 테마
-- 세련된 그라데이션 배경
-- 부드러운 애니메이션과 전환 효과
-- 한국어 폰트 최적화 (Noto Sans KR)
+### 🎨 Design
+- Dark theme suitable for funeral services
+- Sophisticated gradient background
+- Smooth animations and transition effects
+- Korean font optimization (Noto Sans KR)
 
-## 사용 방법
+## How to Use
 
-1. **이미지 추가**
-   - 업로드 영역을 클릭하거나 드래그 앤 드롭으로 이미지 추가
-   - 여러 이미지 동시 업로드 가능
+1. **Add Images**
+   - Click upload area or drag and drop to add images
+   - Multiple images can be uploaded simultaneously
 
-2. **장례준비 시작**
-   - "장례준비" 버튼 클릭
-   - 철문이 천천히 내려오는 애니메이션 실행
+2. **Start Funeral Preparation**
+   - Click "Prepare Funeral" button
+   - Metal door animation slowly descends
 
-3. **철문 제어**
-   - 철문 클릭 또는 ESC 키로 원래 상태로 복원
-   - 모바일에서는 위로 스와이프로 철문 리셋
+3. **Door Control**
+   - Click the door or press ESC key to restore original state
+   - On mobile, swipe up to reset the door
 
-## 기술 스택
+## Technology Stack
 
-- **HTML5**: 시맨틱 마크업
+- **HTML5**: Semantic markup
 - **CSS3**: 
-  - Flexbox & Grid 레이아웃
-  - CSS 애니메이션 및 전환
-  - 반응형 디자인
-  - 커스텀 스크롤바
+  - Flexbox & Grid layout
+  - CSS animations and transitions
+  - Responsive design
+  - Custom scrollbar
 - **JavaScript (ES6+)**:
-  - File API를 이용한 이미지 처리
-  - LocalStorage를 이용한 데이터 저장
-  - 터치 이벤트 처리
-  - 키보드 단축키 지원
+  - Image processing using File API
+  - Data storage using LocalStorage
+  - Touch event handling
+  - Keyboard shortcut support
 
-## 브라우저 지원
+## Browser Support
 
 - Chrome 60+
 - Firefox 55+
 - Safari 12+
 - Edge 79+
-- 모바일 브라우저 (iOS Safari, Chrome Mobile)
+- Mobile browsers (iOS Safari, Chrome Mobile)
 
-## 설치 및 실행
+## Installation and Execution
 
-1. 프로젝트 클론 또는 다운로드
-2. 웹 서버에서 실행하거나 로컬에서 직접 `index.html` 파일 열기
+1. Clone or download the project
+2. Run on web server or open `index.html` file directly in local environment
 
 ```bash
-# 간단한 로컬 서버 실행 (Python 3)
+# Simple local server execution (Python 3)
 python -m http.server 8000
 
-# 또는 Node.js http-server 사용
+# Or use Node.js http-server
 npx http-server
 ```
 
-## 파일 구조
+## File Structure
 
 ```
 funeral-service/
-├── index.html          # 메인 HTML 파일
-├── styles.css          # CSS 스타일시트
-├── script.js           # JavaScript 기능
-└── README.md           # 프로젝트 설명서
+├── index.html          # Main HTML file
+├── styles.css          # CSS stylesheet
+├── script.js           # JavaScript functionality
+└── README.md           # Project documentation
 ```
 
-## 주요 특징
+## Key Features
 
-- **접근성**: 키보드 네비게이션 지원
-- **성능**: 이미지 지연 로딩 및 최적화
-- **사용자 경험**: 직관적인 인터페이스와 부드러운 애니메이션
-- **데이터 보존**: 로컬 스토리지를 통한 이미지 데이터 저장
+- **Accessibility**: Keyboard navigation support
+- **Performance**: Image lazy loading and optimization
+- **User Experience**: Intuitive interface and smooth animations
+- **Data Preservation**: Image data storage through local storage
 
-## 라이선스
+## License
 
-이 프로젝트는 교육 및 개인 사용 목적으로 제작되었습니다.
+This project was created for educational and personal use purposes.
 
 ---
 
-**주의사항**: 이 웹사이트는 장례 서비스를 위한 것으로, 예의와 존경을 담아 제작되었습니다. 
+**Note**: This website is designed for funeral services and was created with respect and courtesy. 
